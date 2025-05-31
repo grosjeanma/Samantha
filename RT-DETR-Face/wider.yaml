@@ -1,0 +1,13 @@
+# Where the images/annotations live
+path: ./datasets
+
+# Train images (directory) and annotation JSON
+train: train
+val: val
+
+# Number of classes in COCO
+nc: 1
+
+# Class names (COCO 80)
+names:
+  0: face
