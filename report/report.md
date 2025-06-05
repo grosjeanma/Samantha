@@ -8,7 +8,7 @@ Despite the growing availability of video data, teachers and educational researc
 
 Moreover, manual anonymization is labor-intensive and technically complex, and most educators do not have the time, tools, or expertise to do it reliably. Commercial solutions, when available, are often not adapted to the specific needs of academic environments — they may be costly, closed-source, or too generic. As a result, teachers are left with tons of valuable but unusable video data, constrained by their responsibility to protect personal data and comply with strict data protection laws such as the General Data Protection Regulation (GDPR) and the Swiss Federal Act on Data Protection (FADP).
 
-This report presents a solution to this pressing need: a lightweight, transparent, and freely available video anonymization tool designed specifically for educators. Developed at the University of Teacher Education, Vaud (HEP Vaud), this software empowers teachers and researchers to anonymize video content easily and securely. It ensures that PII such as facial data is removed or pseudonymized, thereby making videos reusable even if consent is later withdrawn, and opening new possibilities for ethical educational research and practice.
+This report presents a solution to this pressing need: a lightweight, transparent, and freely available video anonymization tool designed specifically for educators. Developed at the University of Teacher Education, Vaud (HEP Vaud), this software empowers teachers and researchers to anonymize video content easily and securely. It ensures that private informations such as facial data is removed or pseudonymized, thereby making videos reusable even if consent is later withdrawn, and opening new possibilities for ethical educational research and practice.
 
 
 ## 2. Theoretical Foundations
@@ -64,7 +64,7 @@ Despite its importance, video anonymization remains a technically complex task. 
 
 Unlike static images, video frames contain:
 - Moving faces that change in position, lighting, orientation, and size.
-- Occlusions (e.g., students turning, hands covering faces).
+- Occlusions (students turning, hands covering faces).
 - Multiple people entering and leaving the frame.
 
 Robust anonymization must detect all faces across all frames, even in difficult conditions.
@@ -72,7 +72,7 @@ Robust anonymization must detect all faces across all frames, even in difficult 
 **Anonymization Quality vs. Data Usability**
 
 Anonymizing video comes with trade-offs:
-- Too much blurring can make pedagogical analysis (e.g., of student reactions or classroom behavior) impossible.
+- Too much blurring can make pedagogical analysis (tudent reactions or classroom behavior) impossible.
 - Too little blurring may not sufficiently protect privacy.
 
 The ideal solution strikes a balance between privacy protection and educational usefulness, with adjustable parameters.
@@ -118,6 +118,12 @@ While YOLO models are widely used and optimized, RT-DETR demonstrated superior a
 
 
 We selected RT-DETR-X, the extended and more capable variant of RT-DETR, as the base model for this project.
+
+RT-DETR (Real-Time Detection Transformer) is a recent family of object detectors that combines the transformer architecture, known for its effectiveness in capturing global context, with a real-time inference pipeline. Unlike traditional CNN-based detectors that use anchor boxes and post-processing steps like Non-Maximum Suppression (NMS), RT-DETR adopts a set-based detection approach. This means it directly predicts object locations and classifications without requiring multiple proposals or region refinement. As a result, RT-DETR tends to produce fewer false positives and better handles overlapping objects [6].
+
+One key advantage of RT-DETR over YOLO is its performance in complex scenes. In cluttered classroom environments with many overlapping objects, RT-DETR maintains a higher detection quality. It is also more stable when objects are partially occluded or vary in size and aspect ratio. Additionally, RT-DETR benefits from transformer-based attention mechanisms that allow it to reason about object relationships more effectively than YOLO.
+
+However, RT-DETR also comes with disadvantages. It is computationally heavier than YOLO, leading to longer inference times and more memory usage. It was chosen because the goal was to prioritize detection accuracy in difficult conditions rather than pure speed. The additional computational cost was acceptable given the model's compatibility with both CUDA and Apple MPS, and the option to run inference remotely when needed.
 
 ## 3.3 Dataset: WIDER Face
 The WIDER Face dataset [7] was chosen for fine-tuning the RT-DETR-X model. 
@@ -192,7 +198,7 @@ At runtime, both models can be used sequentially or selectively:
 
 Both models are lightweight enough to run on Apple Silicon using MPS acceleration, making the application usable on standard university hardware.
 
-## Conclusion
+## 3.7 Conclusion
 
 This chapter has shown the step-by-step process used to build a custom face detection model tailored for educational video anonymization. By selecting RT-DETR-X for its balance of speed and accuracy, and by training it on the WIDER Face dataset, we developed a robust detector capable of operating in real-time on constrained hardware. Despite the computational cost and training challenges, the resulting model is fit for purpose and can be seamlessly integrated into the anonymization pipeline.
 
@@ -200,9 +206,12 @@ This chapter has shown the step-by-step process used to build a custom face dete
 
 The anonymization application developed for this project is composed of two main components: a frontend responsible for user interaction, and a backend that handles all computational tasks, including video analysis and anonymization. This architecture was chosen to balance flexibility, performance, and usability, particularly in environments where computational resources vary significantly.
 
+This application is still under active development and is not yet ready for deployment. Several parts of the system are still being stabilized, and the installation process currently requires technical knowledge. The final goal of the project is to provide a fully packaged application that can be easily executed by end-users on any major operating system (macOS, Windows, Linux). Once the core functionality is complete and tested, executables will be created and distributed to allow one-click launch without requiring manual installation or setup.
+
+
 ## 4.1 Architecture overview
 
-**Frontend (Electron app with Quasar Framework)**
+**Frontend (Electron app with Quasar Framework and Typescript)**
 
 The frontend is developed using Electron and the Quasar Framework (Vue.js) using Typescipt. It provides an intuitive and responsive user interface through which users can:
 - Upload and preview video files
@@ -238,104 +247,114 @@ This separation also offers deployment flexibility:
 
 ## 4.2 Anonymization workflow
 
-The anonymization pipeline follows a structured and interactive and linear process:
+The anonymization process is structured as a step-by-step pipeline that balances automation and human validation to ensure both privacy and usability of the anonymized content. It involves a combination of object detection, manual review, and pixel-level masking, using deep learning models optimized for performance and compatibility with common hardware.
 
-### Step 0: Initialization and Project Setup
-- The user launches the application.
-- A system check evaluates whether the local machine has sufficient compute capabilities.
-- The user is prompted to select or create a workspace, which is then initialized with all required resources (models, dependencies).
-- The user creates a project, selecting a video to process.
+**Step 1: Project Initialization and Video Selection**
 
-### Step 1: Video Trimming
+The process begins when the user creates a new project. Each project is associated with a specific video file that contains potentially sensitive content. The video is loaded into the application, and the workspace is initialized with all necessary resources, including pretrained models and tracking utilities.
 
-In most cases, only specific segments of a video contain sensitive data.
-- The app includes a video trimming tool that allows users to extract only the relevant portion of the footage.
-- This reduces processing time and resource usage while improving precision.
+***Step 2: Video Trimming***
 
-### Step 2: Object Detection Setup
+To optimize processing time and limit anonymization to only necessary segments, the user is prompted to trim the video. This step allows selecting a smaller, relevant portion of the video timeline that actually requires anonymization. It is especially useful when only a short classroom sequence contains identifiable individuals.
 
-- The user selects which objects they want to detect.
+***Step 3: Object Detection***
 
-Options include:
-- 80+ COCO classes (e.g., person, backpack, chair)
-- Faces (using the custom RT-DETR-X face model)
-- Once selection is made, the backend performs object detection across all frames.
-- A tracking algorithm (ByteTrack) is applied to track object instances across time.
+Once trimming is complete, the backend performs object detection on every frame of the trimmed video. Two RT-DETR models are used in parallel:
+- **RT-DETR-X (COCO pretrained)**: Detects general object classes.
+- **RT-DETR-X (WIDER Face fine-tuned)**: Detects human faces with high accuracy.
 
-This allows users to:
-- Follow the same object across frames
-- Interact with and select objects more intuitively in the next step
+Each frame is processed, and all detected objects are associated with bounding boxes. A tracking system (ByteTrack) is also applied to follow each detected object over time, assigning consistent IDs to simplify the user's review process.
 
-### Step 3: Object Selection for Anonymization
-- The user is presented with a fully annotated version of the video, where all detections are visible.
-- Using the UI, the user can:
-- Select specific objects (e.g., only certain people or only faces)
-- Select all detections of a certain type
-- Apply filters to exclude or include only tracked objects
+***Step 4: Object Review and Selection***
 
-This manual validation step is essential to ensure that only relevant detections are anonymized, avoiding over-blurring or loss of useful pedagogical content.
+The user then enters the review phase. All detected objects are displayed on the video frames in the interface. The user is required to go through each frame—or use tracked IDs—to:
+- Select the objects they wish to anonymize.
+- Optionally mark objects to keep unchanged.
 
-### Step 4: Anonymization
-- Once object selection is complete, the frontend sends the video and associated detection metadata to the backend.
-- The backend processes the video frame by frame, and for each bounding box, the following pipeline is applied:
+This manual step ensures that only relevant and ethically sensitive elements are targeted for anonymization, while preserving valuable pedagogical content such as whiteboards, gestures, or interactions that are not privacy-critical.
 
-**Mask Generation with FastSAM-X**
-- FastSAM-X is a real-time segmentation model that produces precise masks from bounding boxes [9].
-- It is lightweight, fast, and compatible with Apple Silicon (M1/M2).
-- The model outputs a binary segmentation mask corresponding to the exact shape of the detected object.
+***Step 5: Anonymization***
 
-**Anonymization Method: Blur or Inpaint**
+After the selection phase, the anonymization process begins. The backend processes the video frame by frame, and for each object marked for anonymization, the following steps are executed:
 
-Depending on the user’s settings, one of two anonymization strategies is applied:
+***5.1 Mask Generation with FastSAM-X***
+For every bounding box, a binary segmentation mask is generated using **FastSAM-X**. This model provides a more precise mask than a simple rectangle, allowing pixel-accurate anonymization. FastSAM-X is selected for its compatibility with Apple Silicon and its ability to run in real time.
 
-- Blurring
-	- A Gaussian blur is applied within the mask.
-	- This is fast and effective but retains some visual presence of the object.
+***5.2 Applying the Anonymization Filter***
 
-- Inpainting with Big-Lama
-	- For complete anonymization, we use Big-Lama, a state-of-the-art deep image inpainting model [10].
-	- Big-Lama reconstructs the masked area with plausible background content, making it appear as if the object was never present.
-	- Like FastSAM, Big-Lama is Apple Silicon–compatible, enabling local processing on modern macOS laptops.
+Depending on the user's chosen method, one of two filters is applied:
 
-- Video Reconstruction
-	- Once all frames are processed:
-	- The backend reassembles the video using ffmpeg, preserving original frame rate and audio.
-	- The output video is stored in the project workspace and made available for download via the frontend.
+- **Blur**: A Gaussian blur is applied to the region defined by the FastSAM mask. This method is fast and preserves contextual cues in the video, while removing facial or object details.
+  
+- **Inpaint**: For complete removal, the masked region is passed to **Big-Lama**, a state-of-the-art inpainting model. Big-Lama fills the area with visually consistent background, effectively erasing the object from the image. It is also Apple Silicon–compatible, ensuring local performance.
 
+***Step 6: Video Reconstruction***
+
+Once all frames are anonymized, the backend reassembles them into a complete video using ffmpeg. The final output preserves the original audio and frame rate, and is exported to the project folder. The user can then review and download the anonymized version.
+
+<img src="process.png" alt="My image" width="500"/>
 
 ⸻
 
-5. Evaluation
-	•	Usability testing (if any was done)
-	•	Performance analysis (speed, CPU/GPU usage)
-	•	Accuracy of anonymization
-	•	Feedback from teachers or testers
+## 5. Evaluation
+The application developed in this project has been successfully tested in several typical educational scenarios. It achieves its main goal: allowing educators and researchers to easily anonymize videos containing sensitive content such as student faces or personal objects. This section evaluates the performance, limitations, and usability of the tool based on real-world testing.
 
-⸻
+### 5.1 Detection Performance
 
-6. Discussion
-	•	Strengths of the approach
-	•	Limitations (e.g., non-face PII not handled)
-	•	Opportunities for improvement (e.g., voice anonymization, active learning)
+The dual-model detection setup—using RT-DETR for general objects and RT-DETR-X for faces—delivers reliable results on a wide range of scenes. In simple scenes, detection accuracy is high and consistent. However, the detection system exhibits some weaknesses in complex classroom environments, particularly when:
+- Faces are partially occluded or viewed from extreme angles.
+- People move quickly or enter and exit the frame rapidly.
+- The background is visually cluttered or highly dynamic.
 
-⸻
+In such conditions, the model may miss detections or introduce false positives. While this is acceptable for many anonymization cases, future versions may require additional refinement or ensemble methods to improve robustness.
 
-7. Conclusion
-	•	Summary of contributions
-	•	Impact on educational data privacy
-	•	Future directions (e.g., full pipeline anonymization, open-source release)
+### 5.2 Tracking and Object Consistency
 
-⸻
+The use of ByteTrack enables consistent object tracking across frames, allowing users to select and anonymize tracked entities efficiently. However, the tracking is not perfect and may:
+- Merge two different people into a single ID when paths cross.
+- Lose track of fast-moving individuals.
 
-8. Appendices
-	•	Code snippets and usage examples
-	•	Installation instructions
-	•	User guide / quick start
-	•	Model training logs or charts
+To address this, a “split” function is planned to allow users to manually separate object identities when tracking fails.
 
-⸻
+### 5.3 Mask Precision and Visual Quality
 
-9. References
+The masking system, based on FastSAM-X, provides fast and hardware-compatible segmentation masks from bounding boxes. However, it is not always precise. In particular:
+- Masks may be too loose or too tight, especially in crowded or occluded scenes.
+- Incomplete coverage may result in visible traces of the original object after processing.
+
+For high-privacy use cases, this can be problematic. While the blur mode is more tolerant of mask imprecision, the inpainting mode using Big-Lama may still produce ghosting artifacts, especially in busy backgrounds or high-contrast areas.
+
+### 5.4 Manual Intervention Requirements
+
+In some cases, objects or regions that should be anonymized are not detected at all by the system. To compensate for this, a manual annotation tool is planned. This tool will allow users to draw bounding boxes or masks directly on frames where detection has failed, ensuring complete coverage.
+
+### 5.5 Performance and Usability
+
+From a usability standpoint, the application is already highly functional and easy to use. The step-by-step interface guides users through the anonymization process clearly. User testing with non-technical educators showed that the UI is intuitive and the overall workflow is understandable without needing technical documentation.
+
+Performance-wise:
+- Detection and tracking are reasonably fast on Apple Silicon devices.
+- Anonymization is significantly slower, especially when using Big-Lama for inpainting. On long videos or lower-spec machines, this may lead to high processing times.
+
+Optimizations such as parallel processing, asynchronous queuing, and frame resolution downscaling may be explored to improve speed.
+
+### 5.6 Summary
+
+In summary, the tool performs well in controlled and semi-complex scenarios and offers a practical anonymization solution for education. Its current limitations—especially in mask quality, tracking consistency, and processing speed—are acknowledged and are being addressed in the next development phases. Despite these, the application already provides meaningful utility to its target users and has laid a solid foundation for future improvements.
+
+# 6. Conclusion
+This project set out to address a concrete and pressing issue in the field of educational research and teacher training: the ethical, legal, and practical challenges of using video data that contains personally identifiable information. Through the development of a specialized video anonymization tool, we demonstrated that it is possible to empower educators with accessible and efficient technology that upholds privacy and complies with strict data protection laws.
+
+The contributions of this work include:
+- A dual-model anonymization pipeline based on RT-DETR-X and fine-tuned face detection models.
+- A user-friendly application architecture that supports real-time detection, manual review, and pixel-level anonymization using advanced models such as FastSAM-X and Big-Lama.
+- A modular frontend/backend system that runs on both local Apple Silicon devices and remote servers.
+
+While the tool is still under development, initial results are promising. The application works well in typical classroom scenarios, and its intuitive interface has been positively received by educators. Nonetheless, important challenges remain. Detection and tracking could be improved in complex scenes, masks can be imprecise, and the anonymization process—especially inpainting—can be slow. The development roadmap includes implementing manual anonymization tools, optimizing performance, and packaging the app for easy deployment across platforms.
+
+This tool represents a concrete step toward responsible, open, and scalable use of video data in education. By combining cutting-edge machine learning models with real-world constraints and ethical priorities, we contribute to a more privacy-conscious academic ecosystem. Once stable, this software will be released as open source, enabling wider adoption and continued improvement by the educational and research community.
+
+# 7. References
 
 [1]: https://egonym.com/blog/best-video-anonymization-software-for-privacy-compliance
 [2]: https://forscenter.ch/wp-content/uploads/2020/06/kleinerstam_fg11_anonymisation1_v1.0-1.pdf
