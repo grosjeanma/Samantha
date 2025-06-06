@@ -31,7 +31,7 @@ The detailed project report — including model training, architecture, anonymiz
 
 This is a demo of the global workflow:
 
-![Anonymization workflow demo](./report/steps_all.gif)
+![Anonymization workflow demo](./report/steps.gif)
 
 
 ---
