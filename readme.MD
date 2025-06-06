@@ -35,7 +35,7 @@ This is a demo of the global workflow:
 
 #### Anonymization process
 
-The anonymization process in Samantha involves several key steps. First, the app detects all relevant objects in each video frame using two RT-DETR models—one for general objects and one specifically for faces. The user then manually selects which detected objects to anonymize. For each selected object, the system applies a segmentation mask using FastSAM-X, and then either blurs the region or inpaints it using Big-Lama to remove identifiable information. Finally, the anonymized frames are reassembled into a processed video.
+The anonymization process in Samantha involves several key steps. First, the app detects all relevant objects in each video frame using two RT-DETR models—one for general objects and one specifically trained for faces. All the objects are tracked across frames with ByteTrack. The user then manually selects which detected objects to anonymize. For each selected object, the system applies a segmentation mask using FastSAM-X, and then either blurs the region or inpaints it using Big-Lama to remove identifiable information. Finally, the anonymized frames are reassembled into a processed video.
 
 ![Anonymization process](./report/process.png)
 
