@@ -41,8 +41,7 @@ This is a demo of the global workflow:
 ```
 📦 Samantha/
  ┣ 📂 Samantha/           → Full anonymization app
- ┃ ┣ 📂 frontend/         → Quasar/Vue-based frontend UI
- ┃ ┗ 📂 backend/          → Python backend with detection, tracking, anonymization logic
+ ┃ ┗ 📂 src-pytjon/       → Python backend with detection, tracking, anonymization logic
  ┣ 📂 RT-DETR-Face/       → Trained face detection model (RT-DETR-X on WIDER Face)
  ┃ ┣ 📄 train-RT-DETR-X-Face.ipynb → Training notebook
  ┃ ┣ 📄 wider.yaml        → Dataset config
