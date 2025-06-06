@@ -23,7 +23,7 @@ This project was developed as part of the final project in the **Certificate of 
 
 ## 📄 Final Report
 
-The detailed project report — including model training, architecture, anonymization pipeline, evaluation, and references — is available in the [`/report/final_report.pdf`](./report) folder.
+The detailed project report — including model training, architecture, anonymization pipeline, evaluation, and references — is available in the [`/report/final_report.pdf`](./report/final_report.pdf) folder.
 
 ---
 
@@ -37,6 +37,21 @@ This is a demo of the global workflow:
 ---
 
 ## 📁 Repository Structure
+
+```
+📦 Samantha/
+ ┣ 📂 Samantha/           → Full anonymization app
+ ┃ ┣ 📂 frontend/         → Quasar/Vue-based frontend UI
+ ┃ ┗ 📂 backend/          → Python backend with detection, tracking, anonymization logic
+ ┣ 📂 RT-DETR-Face/       → Trained face detection model (RT-DETR-X on WIDER Face)
+ ┃ ┣ 📄 train-RT-DETR-X-Face.ipynb → Training notebook
+ ┃ ┣ 📄 wider.yaml        → Dataset config
+ ┃ ┗ 📄 *.py              → Annotation converters and helpers
+ ┣ 📂 report/             → Final written report and resources
+ ┃ ┣ 📄 final_report.pdf  → Complete PDF report
+ ┃ ┗ 📄 steps.gif         → Demo animation of the full pipeline
+ ┗ 📄 README.md           → Project overview and usage
+```
 
 ---
 
